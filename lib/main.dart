@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/second.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,16 +34,19 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Test Title"),
-        backgroundColor: Colors.blue,
       ),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        child: const Image(
-          image: NetworkImage(
-            "https://cdn.pixabay.com/photo/2017/12/10/13/37/christmas-3009949_1280.jpg",
+      body: Center(
+        child: GestureDetector(
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SecondView(),
+              )),
+          child: Container(
+            padding: const EdgeInsets.all(15),
+            color: Colors.blue,
+            child: const Text("First View"),
           ),
-          fit: BoxFit.cover,
         ),
       ),
     );
