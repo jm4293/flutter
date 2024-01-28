@@ -36,33 +36,13 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Colors.blue,
       ),
       body: Container(
-        child: Center(
-          child: TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text("Test Title"),
-                    content: Text("Test Dialog"),
-                    actions: [
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text("yes"),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("Close"),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: const Text("Test Button"),
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        child: const Image(
+          image: NetworkImage(
+            "https://cdn.pixabay.com/photo/2017/12/10/13/37/christmas-3009949_1280.jpg",
           ),
+          fit: BoxFit.cover,
         ),
       ),
     );
