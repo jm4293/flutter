@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:project/product.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,21 +29,35 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _selectedIndex = 0;
+class _MyHomePageState extends State<MyHomePage> {
+  late Future<List<Product>> productList;
+  Dio dio = Dio();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() => setState(() => _selectedIndex = _tabController.index));
+    productList = getProductList();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  Future<List<Product>> getProductList() async {
+    late List<Product> products;
+
+    try {
+      var response = await dio.get("https://dummyjson.com/products");
+      products = response.data['products'].map<Product>((json) => Product.fromJson(json)).toList();
+    } catch (error) {
+      print(error);
+    }
+
+    return products;
+  }
+
+  Future<void> refreshData() async {
+    productList = getProductList();
+
+    setState(() {
+      productList = getProductList();
+    });
   }
 
   @override
@@ -52,49 +68,38 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           title: const Text("Test Title"),
           backgroundColor: Colors.blue,
         ),
-        body: _selectedIndex == 0
-            ? tabContainer(context, Colors.blue, "Home")
-            : _selectedIndex == 1
-                ? tabContainer(context, Colors.red, "Search")
-                : tabContainer(context, Colors.green, "Settings"),
-        bottomNavigationBar: TabBar(
-          controller: _tabController,
-          labelColor: Colors.black,
-          tabs: [
-            Tab(
-              icon: Icon(
-                _selectedIndex == 0 ? Icons.home : Icons.home_outlined,
-              ),
-              text: "Home",
-            ),
-            Tab(
-              icon: Icon(_selectedIndex == 1 ? Icons.search : Icons.search_outlined),
-              text: "Search",
-            ),
-            Tab(
-              icon: Icon(
-                _selectedIndex == 2 ? Icons.settings : Icons.settings_outlined,
-              ),
-              text: "Settings",
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+        body: RefreshIndicator(
+          onRefresh: () => refreshData(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: FutureBuilder<List<Product>>(
+              future: productList,
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                      child: CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                  ));
+                } else {
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: snapshot.data.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      var data = snapshot.data[index];
 
-  Widget tabContainer(BuildContext context, Color tabColor, String tabText) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      color: tabColor,
-      child: Center(
-        child: Text(
-          tabText,
-          style: const TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+                      return Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: Text("${data.title}(${data.description})"),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
           ),
         ),
       ),
