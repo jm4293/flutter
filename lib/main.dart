@@ -1,5 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:project/second.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,24 +31,49 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static Future loadJson() async {
+    final String response = await rootBundle.loadString('lib/users.json');
+    final data = await json.decode(response);
+
+    return data['students'];
+  }
+
+  Future userList = loadJson();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Test Title"),
+        backgroundColor: Colors.blue,
       ),
-      body: Center(
-        child: GestureDetector(
-          onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const SecondView(),
-              )),
-          child: Container(
-            padding: const EdgeInsets.all(15),
-            color: Colors.blue,
-            child: const Text("First View"),
-          ),
+      body: Container(
+        child: FutureBuilder(
+          future: userList,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return ListView.builder(
+                itemCount: snapshot.data.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                        "${snapshot.data[index]['full_name']}의 나이:  ${snapshot.data[index]['age']}"),
+                  );
+                },
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text("Error"),
+              );
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              );
+            }
+          },
         ),
       ),
     );
