@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,58 +27,76 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  late SharedPreferences _preferences;
-  String _username = "";
-  final TextEditingController _usernameController = TextEditingController();
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _getUsername();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() => setState(() => _selectedIndex = _tabController.index));
   }
 
-  _saveUsername() {
-    setState(
-      () => {
-        _username = _usernameController.text,
-        _preferences.setString("username", _username),
-      },
-    );
-  }
-
-  _getUsername() async {
-    _preferences = await SharedPreferences.getInstance();
-    setState(
-      () => _username = _preferences.getString("username") ?? "",
-    );
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Test Title"),
-        backgroundColor: Colors.blue,
-      ),
-      body: Column(
-        children: [
-          Text("현재 사용자 이름: ${_username}"),
-          Container(
-            child: TextField(
-              controller: _usernameController,
-              textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                hintText: "사용자 이름을 입력하세요",
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Test Title"),
+          backgroundColor: Colors.blue,
+        ),
+        body: _selectedIndex == 0
+            ? tabContainer(context, Colors.blue, "Home")
+            : _selectedIndex == 1
+                ? tabContainer(context, Colors.red, "Search")
+                : tabContainer(context, Colors.green, "Settings"),
+        bottomNavigationBar: TabBar(
+          controller: _tabController,
+          labelColor: Colors.black,
+          tabs: [
+            Tab(
+              icon: Icon(
+                _selectedIndex == 0 ? Icons.home : Icons.home_outlined,
               ),
+              text: "Home",
             ),
+            Tab(
+              icon: Icon(_selectedIndex == 1 ? Icons.search : Icons.search_outlined),
+              text: "Search",
+            ),
+            Tab(
+              icon: Icon(
+                _selectedIndex == 2 ? Icons.settings : Icons.settings_outlined,
+              ),
+              text: "Settings",
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget tabContainer(BuildContext context, Color tabColor, String tabText) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      color: tabColor,
+      child: Center(
+        child: Text(
+          tabText,
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          TextButton(
-            onPressed: () => _saveUsername(),
-            child: const Text("저장"),
-          )
-        ],
+        ),
       ),
     );
   }
